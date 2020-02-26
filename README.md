@@ -1,3 +1,5 @@
+# 支持垂直方向上的滚动：新增.top/.bottom
+
 # JXMarqueeView  
 
 [![languages](https://img.shields.io/badge/language-swift-FF69B4.svg?style=plastic)](https://developer.apple.com/swift) 
