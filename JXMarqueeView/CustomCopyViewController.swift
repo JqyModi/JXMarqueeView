@@ -18,7 +18,7 @@ class CustomCopyViewController: UIViewController {
 
         let customView = CustomCopyView(frame: CGRect(x: 0, y: 100, width: 300, height: 50))
         marqueeView.contentView = customView
-        marqueeView.marqueeType = .left
+        marqueeView.marqueeType = .top
         marqueeView.pointsPerFrame = 0.2
         self.view.addSubview(marqueeView)
     }
@@ -26,7 +26,7 @@ class CustomCopyViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
-        marqueeView.bounds = CGRect(x:0, y:0, width: self.view.bounds.width - 200, height: 50)
+        marqueeView.bounds = CGRect(x:0, y:0, width: 300, height: 20)
         marqueeView.center = self.view.center
     }
 

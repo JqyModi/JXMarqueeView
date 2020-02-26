@@ -29,6 +29,8 @@ extension UIView: JXMarqueeViewCopyable {
 public enum JXMarqueeType {
     case left
     case right
+    case top
+    case bottom
     case reverse
 }
 
@@ -101,26 +103,51 @@ public class JXMarqueeView: UIView {
         if marqueeType == .reverse{
             containerView.frame = CGRect(x: 0, y: 0, width: validContentView.bounds.size.width, height: self.bounds.size.height)
         }else {
-            containerView.frame = CGRect(x: 0, y: 0, width: validContentView.bounds.size.width*2 + contentMargin, height: self.bounds.size.height)
-        }
-
-        if validContentView.bounds.size.width > self.bounds.size.width {
-            validContentView.frame = CGRect(x: 0, y: 0, width: validContentView.bounds.size.width, height: self.bounds.size.height)
-            if marqueeType != .reverse {
-                //骚操作：UIView是没有遵从拷贝协议的。可以通过UIView支持NSCoding协议，间接来复制一个视图
-                let otherContentView = validContentView.copyMarqueeView()
-                otherContentView.frame = CGRect(x: validContentView.bounds.size.width + contentMargin, y: 0, width: validContentView.bounds.size.width, height: self.bounds.size.height)
-                containerView.addSubview(otherContentView)
-            }
-
-            self.startMarquee()
-        }else {
-            if contentViewFrameConfigWhenCantMarquee != nil {
-                contentViewFrameConfigWhenCantMarquee!(validContentView)
+            if marqueeType == .top || marqueeType == .bottom {
+                containerView.frame = CGRect(x: 0, y: 0, width: self.bounds.size.width, height: validContentView.bounds.size.height*2 + contentMargin)
             }else {
-                validContentView.frame = CGRect(x: 0, y: 0, width: validContentView.bounds.size.width, height: self.bounds.size.height)
+                containerView.frame = CGRect(x: 0, y: 0, width: validContentView.bounds.size.width*2 + contentMargin, height: self.bounds.size.height)
             }
         }
+
+        if marqueeType == .left || marqueeType == .right {  // 横向
+            if validContentView.bounds.size.width > self.bounds.size.width {    // 需要滚动
+                validContentView.frame = CGRect(x: 0, y: 0, width: validContentView.bounds.size.width, height: self.bounds.size.height)
+                if marqueeType != .reverse {
+                    //骚操作：UIView是没有遵从拷贝协议的。可以通过UIView支持NSCoding协议，间接来复制一个视图
+                    let otherContentView = validContentView.copyMarqueeView()
+                    otherContentView.frame = CGRect(x: validContentView.bounds.size.width + contentMargin, y: 0, width: validContentView.bounds.size.width, height: self.bounds.size.height)
+                    containerView.addSubview(otherContentView)
+                }
+
+                self.startMarquee()
+            }else { // 不需要滚动
+                if contentViewFrameConfigWhenCantMarquee != nil {
+                    contentViewFrameConfigWhenCantMarquee!(validContentView)
+                }else {
+                    validContentView.frame = CGRect(x: 0, y: 0, width: validContentView.bounds.size.width, height: self.bounds.size.height)
+                }
+            }
+        }else { // 纵向
+            if validContentView.bounds.size.height > self.bounds.size.height {    // 需要滚动
+                validContentView.frame = CGRect(x: 0, y: 0, width: self.bounds.size.width, height: validContentView.bounds.size.height)
+                if marqueeType != .reverse {
+                    //骚操作：UIView是没有遵从拷贝协议的。可以通过UIView支持NSCoding协议，间接来复制一个视图
+                    let otherContentView = validContentView.copyMarqueeView()
+                    otherContentView.frame = CGRect(x: 0, y: validContentView.bounds.size.height + contentMargin, width: self.bounds.size.width, height: validContentView.bounds.size.width)
+                    containerView.addSubview(otherContentView)
+                }
+
+                self.startMarquee()
+            }else { // 不需要滚动
+                if contentViewFrameConfigWhenCantMarquee != nil {
+                    contentViewFrameConfigWhenCantMarquee!(validContentView)
+                }else {
+                    validContentView.frame = CGRect(x: 0, y: 0, width: self.bounds.size.width, height: validContentView.bounds.size.height)
+                }
+            }
+        }
+
     }
 
     //如果你的contentView的内容在初始化的时候，无法确定。需要通过网络等延迟获取，那么在内容赋值之后，在调用该方法即可。
@@ -134,6 +161,12 @@ public class JXMarqueeView: UIView {
         if marqueeType == .right {
             var frame = self.containerView.frame
             frame.origin.x = self.bounds.size.width - frame.size.width
+            self.containerView.frame = frame
+        }
+        
+        if marqueeType == .bottom {
+            var frame = self.containerView.frame
+            frame.origin.y = self.bounds.size.height - frame.size.height
             self.containerView.frame = frame
         }
 
@@ -202,6 +235,30 @@ public class JXMarqueeView: UIView {
                     }
                     self.containerView.frame = frame
                 }
+            }
+        case .top:
+            let targetY = -(self.contentView!.bounds.size.height + self.contentMargin)
+            if frame.origin.y <= targetY {
+                frame.origin.y = 0
+                self.containerView.frame = frame
+            }else {
+                frame.origin.y -= pointsPerFrame
+                if frame.origin.y < targetY {
+                    frame.origin.y = targetY
+                }
+                self.containerView.frame = frame
+            }
+        case .bottom:
+            let targetY = self.bounds.size.height - self.contentView!.bounds.size.height
+            if frame.origin.y >= targetY {
+                frame.origin.y = self.bounds.size.height - self.containerView.bounds.size.height
+                self.containerView.frame = frame
+            }else {
+                frame.origin.y += pointsPerFrame
+                if frame.origin.y > targetY {
+                    frame.origin.y = targetY
+                }
+                self.containerView.frame = frame
             }
         }
 
